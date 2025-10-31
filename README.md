@@ -85,9 +85,15 @@ export NODE_COUNT="3"
 
 If you prefer to run the steps manually:
 
-### Step 1: Create AKS Cluster with Azure Policy
+### Step 1: Register VAP Feature and Create AKS Cluster
 
 ```bash
+# Register the ValidatingAdmissionPolicy feature for Azure Policy
+az feature register --namespace Microsoft.ContainerService --name AKS-AzurePolicyValidatingAdmissionPolicy
+
+# Check registration status (may take a few minutes)
+az feature show --namespace Microsoft.ContainerService --name AKS-AzurePolicyValidatingAdmissionPolicy
+
 # Create resource group
 az group create --name vap-demo-rg --location eastus
 

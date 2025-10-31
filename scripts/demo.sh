@@ -145,13 +145,24 @@ EOF
 }
 
 function create_aks_cluster() {
-    print_header "Step 1: Create AKS Cluster with VAP Feature Enabled"
+    print_header "Step 1: Register VAP Feature and Create AKS Cluster"
     
+    print_info "Registering Azure Policy ValidatingAdmissionPolicy (VAP) feature..."
+    print_info "Note: This feature enables Kubernetes ValidatingAdmissionPolicy support in Azure Policy"
+    
+    # Register the feature flag for VAP support
+    pe "az feature register --namespace Microsoft.ContainerService --name AKS-AzurePolicyValidatingAdmissionPolicy" || true
+    
+    echo ""
+    print_info "Checking feature registration status..."
+    pe "az feature show --namespace Microsoft.ContainerService --name AKS-AzurePolicyValidatingAdmissionPolicy" || print_warning "Feature may not be available in your subscription"
+    
+    echo ""
     print_info "Creating resource group..."
     pe "az group create --name ${RESOURCE_GROUP} --location ${LOCATION}"
     
     echo ""
-    print_info "Creating AKS cluster with VAP feature flag enabled..."
+    print_info "Creating AKS cluster with Azure Policy add-on and VAP support..."
     print_warning "This may take several minutes..."
     
     pe "az aks create \
@@ -165,7 +176,7 @@ function create_aks_cluster() {
         --network-plugin azure \
         --generate-ssh-keys"
     
-    print_success "AKS cluster created successfully"
+    print_success "AKS cluster created successfully with Azure Policy add-on"
     wait
 }
 
@@ -279,10 +290,19 @@ function test_policy_deny() {
     print_info "Attempting to create a privileged pod (should be denied)..."
     echo -e "${BLUE}\$ ${NC}kubectl apply -f manifests/test-privileged-pod.yaml"
     
-    if kubectl apply -f manifests/test-privileged-pod.yaml 2>&1; then
+    # Capture the output to show the denial message
+    local output
+    output=$(kubectl apply -f manifests/test-privileged-pod.yaml 2>&1)
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
         print_error "Unexpected: Pod was allowed (policy may not be enforcing)"
+        echo "$output"
     else
         print_success "Policy correctly denied the privileged pod!"
+        echo ""
+        print_info "Denial details:"
+        echo -e "${YELLOW}${output}${NC}"
     fi
     
     wait
