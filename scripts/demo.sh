@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e  # Exit on error
 
 ##############################################################################
 # VAP (Validating Admission Policy) Demo for AKS Azure Policy
@@ -207,7 +208,14 @@ function apply_constraint_template() {
     
     echo ""
     print_info "Waiting for constraint template to be ready..."
-    sleep 5
+    # Poll for constraint template readiness
+    for i in {1..30}; do
+        if kubectl get constrainttemplate k8spspprivilegedcontainer &>/dev/null; then
+            print_success "Constraint template is ready"
+            break
+        fi
+        sleep 2
+    done
     
     echo ""
     print_info "Viewing constraint template..."
@@ -228,7 +236,14 @@ function apply_constraint() {
     
     echo ""
     print_info "Waiting for constraint to be ready..."
-    sleep 5
+    # Poll for constraint readiness
+    for i in {1..30}; do
+        if kubectl get k8spspprivilegedcontainer psp-privileged-container &>/dev/null; then
+            print_success "Constraint is ready"
+            break
+        fi
+        sleep 2
+    done
     
     echo ""
     print_info "Viewing constraints..."
@@ -248,7 +263,13 @@ function test_policy_deny() {
     print_header "Step 6: Test Policy Enforcement - Deny Privileged Pod"
     
     print_info "Attempting to create a privileged pod (should be denied)..."
-    pe "kubectl apply -f manifests/test-privileged-pod.yaml" || print_error "Policy correctly denied the privileged pod"
+    echo -e "${BLUE}\$ ${NC}kubectl apply -f manifests/test-privileged-pod.yaml"
+    
+    if kubectl apply -f manifests/test-privileged-pod.yaml 2>&1; then
+        print_error "Unexpected: Pod was allowed (policy may not be enforcing)"
+    else
+        print_success "Policy correctly denied the privileged pod!"
+    fi
     
     wait
 }
