@@ -1,0 +1,40 @@
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Azure CLI cache
+.azure/
+
+# Kubernetes config
+kubeconfig
+*.kubeconfig
+
+# Logs
+*.log
+logs/
+
+# Terraform (if added later)
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+
+# Environment variables
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
