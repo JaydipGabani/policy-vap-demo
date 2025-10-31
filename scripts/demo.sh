@@ -208,14 +208,21 @@ function apply_constraint_template() {
     
     echo ""
     print_info "Waiting for constraint template to be ready..."
-    # Poll for constraint template readiness
+    # Poll for constraint template readiness with timeout
+    local ready=false
     for i in {1..30}; do
         if kubectl get constrainttemplate k8spspprivilegedcontainer &>/dev/null; then
             print_success "Constraint template is ready"
+            ready=true
             break
         fi
         sleep 2
     done
+    
+    if [ "$ready" = false ]; then
+        print_error "Timeout waiting for constraint template to be ready"
+        return 1
+    fi
     
     echo ""
     print_info "Viewing constraint template..."
@@ -236,14 +243,21 @@ function apply_constraint() {
     
     echo ""
     print_info "Waiting for constraint to be ready..."
-    # Poll for constraint readiness
+    # Poll for constraint readiness with timeout
+    local ready=false
     for i in {1..30}; do
         if kubectl get k8spspprivilegedcontainer psp-privileged-container &>/dev/null; then
             print_success "Constraint is ready"
+            ready=true
             break
         fi
         sleep 2
     done
+    
+    if [ "$ready" = false ]; then
+        print_error "Timeout waiting for constraint to be ready"
+        return 1
+    fi
     
     echo ""
     print_info "Viewing constraints..."

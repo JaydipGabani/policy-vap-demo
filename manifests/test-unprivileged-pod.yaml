@@ -6,6 +6,6 @@ metadata:
 spec:
   containers:
   - name: nginx
-    image: nginx:latest
+    image: nginx:1.25
     securityContext:
       privileged: false
